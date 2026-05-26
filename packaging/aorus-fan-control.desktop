@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=AORUS Fan Control
+GenericName=Fan Controller
+Comment=Fan mode and EC control for the Gigabyte AORUS 15G KB laptop
+Exec=/opt/aorus-fan-control/aorus-fan-control
+Icon=cpu
+Terminal=false
+Categories=System;HardwareSettings;
+Keywords=fan;cpu;temperature;ec;embedded;controller;gigabyte;aorus;laptop;cooling;
+StartupNotify=true

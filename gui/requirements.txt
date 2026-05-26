@@ -1,0 +1,7 @@
+# GUI dependencies for AORUS 15G Fan Control
+# Primary: PySide6 (LGPL, Qt 6)
+PySide6
+# Alternative: substitute PyQt5 if PySide6 is unavailable
+# PyQt5
+
+matplotlib

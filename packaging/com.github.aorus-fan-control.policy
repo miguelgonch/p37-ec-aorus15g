@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<!--
+  Polkit action for AORUS Fan Control.
+  Installed to /usr/share/polkit-1/actions/ by packaging/install.sh.
+
+  auth_admin_keep: requires admin (sudo-group) password once per session.
+-->
+<policyconfig>
+  <vendor>AORUS Fan Control</vendor>
+  <vendor_url>https://github.com/mg/p37-ec-aorus15g</vendor_url>
+
+  <action id="org.freedesktop.policykit.exec">
+    <description>Run AORUS Fan Control</description>
+    <message>Authentication is required to control the laptop's Embedded
+Controller (fan modes, screen toggle).</message>
+    <icon_name>cpu</icon_name>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/opt/aorus-fan-control/aorus-fan-control</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>
