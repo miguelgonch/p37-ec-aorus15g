@@ -61,34 +61,37 @@ if [[ "$1" == "fix" || "$1" == "automax" ]]; then
   fi
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+EC="$SCRIPT_DIR/p37ec-aorus15g"
+
 # Set all fan mode bits to zero (normal mode)
-p37ec-aorus15g 0x08.6 0
-p37ec-aorus15g 0x06.4 0
-p37ec-aorus15g 0x0D.0 0
-p37ec-aorus15g 0x0D.7 0
-p37ec-aorus15g 0x0C.4 0
+"$EC" 0x08.6 0
+"$EC" 0x06.4 0
+"$EC" 0x0D.0 0
+"$EC" 0x0D.7 0
+"$EC" 0x0C.4 0
 
 # For all other cases
 if [[ "$1" != "normal" ]]; then
   case $1 in
     quiet)
-      p37ec-aorus15g 0x08.6 1
+      "$EC" 0x08.6 1
       ;;
     fix)
-      p37ec-aorus15g 0xB0 "$fan_speed_hex"
-      p37ec-aorus15g 0xB1 "$fan_speed_hex"
-      p37ec-aorus15g 0x06.4 1
+      "$EC" 0xB0 "$fan_speed_hex"
+      "$EC" 0xB1 "$fan_speed_hex"
+      "$EC" 0x06.4 1
       ;;
     automax)
-      p37ec-aorus15g 0xB0 $fan_speed_hex
-      p37ec-aorus15g 0xB1 $fan_speed_hex
-      p37ec-aorus15g 0x0D.0 1
+      "$EC" 0xB0 $fan_speed_hex
+      "$EC" 0xB1 $fan_speed_hex
+      "$EC" 0x0D.0 1
       ;;
     deepcontrol)
-      p37ec-aorus15g 0x0D.7 1
+      "$EC" 0x0D.7 1
       ;;
     gaming)
-      p37ec-aorus15g 0x0C.4 1
+      "$EC" 0x0C.4 1
       ;;
     *)
       $0 normal
