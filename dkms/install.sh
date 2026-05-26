@@ -9,7 +9,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DKMS_NAME="ec-io"
 DKMS_VER="1.0"
-KERNEL="$(uname -r)"
 
 # --- Remove old ec-sys-write module if present ---
 if dkms status ec-sys-write 2>/dev/null | grep -q installed; then
