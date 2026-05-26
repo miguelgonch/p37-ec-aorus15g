@@ -130,6 +130,17 @@ The notation `[0x08.6]` means bit `6` (bit 0 = LSB) of register `0x08`.
 
 ---
 
+# GUI
+
+A desktop GUI for reading and controlling the Embedded Controller (EC) fan modes tested on **Gigabyte AORUS 15G XC** laptop.
+
+[Check the README.md](./gui/README.md)
+
+![alt text](gui.png)
+
+
+---
+
 # Fan modes
 
 There are **six** fan modes available in the [AORUS Control Center](https://download.gigabyte.com/FileList/Manual/ControlCenter_QSG_Manual_v1.1.pdf). Three are hard-coded: **Normal**, **Quiet**, and **Gaming**. Three are user-configurable: **AutoMax**, **Fix**, and **Deep control**. All modes are controlled by combinations of five EC bits:

@@ -2,6 +2,8 @@
 
 A desktop GUI for reading and controlling the Embedded Controller (EC) fan modes on the **Gigabyte AORUS 15G KB** laptop.
 
+![alt text](../gui.png)
+
 ## Features
 
 - **Live fan status** — Fan0 / Fan1 speed (% and RPM) with progress bars
