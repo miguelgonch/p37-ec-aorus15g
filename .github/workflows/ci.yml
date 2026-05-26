@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+
+jobs:
+  compile:
+    name: Compile C binary
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile p37ec-aorus15g
+        run: g++ p37ec-aorus15g.c -o p37ec-aorus15g -lm
+
+      # The binary exits non-zero when /dev/ec_io is absent — that's expected
+      # in CI. We just confirm it loads (not a SIGSEGV / bad ELF / linker error).
+      - name: Verify binary loads
+        run: |
+          ./p37ec-aorus15g 2>&1 | grep -qiE 'error|modprobe|fopen|ec_io' \
+            && echo "Binary loaded OK (EC not available in CI — expected)" \
+            || { echo "Unexpected output or silent crash" >&2; exit 1; }
+
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y --no-install-recommends shellcheck
+
+      - name: Lint shell scripts
+        run: |
+          shellcheck \
+            set-fan-mode.sh \
+            dkms/install.sh \
+            packaging/build.sh \
+            packaging/install.sh

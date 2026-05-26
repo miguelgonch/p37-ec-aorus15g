@@ -3,3 +3,5 @@ dist/
 build/
 *.spec.bak
 gui/__pycache__/*
+# Compiled C binary — not tracked; always built from source via packaging/build.sh
+p37ec-aorus15g

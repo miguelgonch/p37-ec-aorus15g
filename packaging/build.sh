@@ -11,6 +11,20 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# ── Compile the EC binary ──────────────────────────────────────────────────────
+# p37ec-aorus15g is NOT tracked by git (see .gitignore); it is always compiled
+# fresh here. PyInstaller (aorus-fan-control.spec) requires it at the repo root.
+echo "==> Compiling C binary: p37ec-aorus15g"
+if ! command -v g++ &>/dev/null; then
+    echo "ERROR: g++ not found. Install it with:" >&2
+    echo "       sudo apt install g++       (Debian/Ubuntu)" >&2
+    echo "       sudo dnf install gcc-c++   (Fedora/RHEL)" >&2
+    exit 1
+fi
+g++ p37ec-aorus15g.c -o p37ec-aorus15g -lm
+echo "    Compiled: $REPO_ROOT/p37ec-aorus15g"
+echo ""
+
 # ── Ensure uv is available ─────────────────────────────────────────────────────
 if ! command -v uv &>/dev/null; then
     echo "==> uv not found — installing via the official installer..."
