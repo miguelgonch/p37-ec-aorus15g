@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 display_usage() {
 # Prints Usage for set-fan-mode
@@ -12,8 +13,8 @@ display_usage() {
 
 exists_in_list() {
 # Function for determine if a word is in a space-separated list
-  list=$1
-  word=$2
+  local list=$1
+  local word=$2
   if [[ "$list" =~ (" "|^)$word(" "|$) ]]; then
     echo 1
   else
@@ -22,29 +23,30 @@ exists_in_list() {
 }
 
 validate_fan_speed() {
-  speed=$1
+  local speed=$1
   if [[ "$speed" -lt 30 || "$speed" -gt 100 ]]; then
     echo "0x00"
   else
-    speed_dec=$(($speed * 229 / 100))
-    echo $(printf '0x%X' $speed_dec)
+    local speed_dec=$(( speed * 229 / 100 ))
+    printf '0x%X\n' "$speed_dec"
   fi
 }
 
-# If no args, or --help or --h, display usage
-if [[ ${#@} == 0 || ( $@ == "--help") ||  $@ == "-h" ]]
-  then
+# If no args, or --help or -h, display usage
+if [[ $# == 0 || "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     display_usage
     exit 0
 fi
 
 # Check that mode is in the list
 listModes="normal quiet gaming deepcontrol fix automax"
-isValidMode="$(exists_in_list "$listModes" $1)"
-if [[ $isValidMode -eq 0 ]]; then
+isValidMode="$(exists_in_list "$listModes" "$1")"
+if [[ "$isValidMode" -eq 0 ]]; then
   echo "Fan mode \"$1\" is not supported"
   exit 1
 fi
+
+extra=""
 
 # Check that it has fan-speed if needed
 if [[ "$1" == "fix" || "$1" == "automax" ]]; then
@@ -52,7 +54,7 @@ if [[ "$1" == "fix" || "$1" == "automax" ]]; then
     echo "Fan speed % is needed for \"$1\" mode"
       exit 1
   else
-    fan_speed_hex="$(validate_fan_speed $2)"
+    fan_speed_hex="$(validate_fan_speed "$2")"
     if [[ "$fan_speed_hex" == "0x00" ]]; then
       echo "Fan speed needs to be > 30% and < 100%"
       exit 1
@@ -83,8 +85,8 @@ if [[ "$1" != "normal" ]]; then
       "$EC" 0x06.4 1
       ;;
     automax)
-      "$EC" 0xB0 $fan_speed_hex
-      "$EC" 0xB1 $fan_speed_hex
+      "$EC" 0xB0 "$fan_speed_hex"
+      "$EC" 0xB1 "$fan_speed_hex"
       "$EC" 0x0D.0 1
       ;;
     deepcontrol)
@@ -94,7 +96,7 @@ if [[ "$1" != "normal" ]]; then
       "$EC" 0x0C.4 1
       ;;
     *)
-      $0 normal
+      "$0" normal
       ;;
   esac
 fi

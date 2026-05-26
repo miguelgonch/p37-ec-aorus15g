@@ -81,21 +81,26 @@ For full details on the GUI features and development usage, see [gui/README.md](
 
 ## Installation
 
-**Build** (requires `curl` and `python3`; `uv` is installed automatically if missing):
+**Option A — Download a pre-built release (easiest):**
+
+Download the latest tarball from [Releases](https://github.com/miguelgonch/p37-ec-aorus15g/releases), verify the checksum, then install:
+
+```bash
+tar -xzf aorus-fan-control-vX.Y.Z-linux-x86_64.tar.gz
+sha256sum -c aorus-fan-control-vX.Y.Z-linux-x86_64.tar.gz.sha256
+sudo bash aorus-fan-control/install.sh
+```
+
+**Option B — Build from source** (requires `curl` and `g++`; `uv` is installed automatically if missing):
 
 ```bash
 bash packaging/build.sh
-```
-
-This produces a self-contained bundle at `dist/aorus-fan-control/` (~200 MB) that does not require Python or any pip packages on the target machine.
-
-**Install system-wide:**
-
-```bash
 sudo bash packaging/install.sh
 ```
 
-This copies the bundle to `/opt/aorus-fan-control/`, adds *AORUS Fan Control* to the system application menu, and installs a polkit action so a graphical password dialog appears on launch instead of requiring a terminal `sudo`.
+`packaging/build.sh` compiles the C binary and builds the PyInstaller bundle automatically. This produces a self-contained bundle at `dist/aorus-fan-control/` (~200 MB) that does not require Python or any pip packages on the target machine.
+
+`sudo bash packaging/install.sh` copies the bundle to `/opt/aorus-fan-control/`, adds *AORUS Fan Control* to the system application menu, and installs a polkit action so a graphical password dialog appears on launch instead of requiring a terminal `sudo`.
 
 ## Running
 
@@ -120,6 +125,8 @@ g++ p37ec-aorus15g.c -o p37ec-aorus15g -lm
 ```
 
 The `-lm` flag is required for `round()` from `<math.h>`. The binary must be named `p37ec-aorus15g` — `set-fan-mode.sh` calls it by that exact name.
+
+> **Note:** The compiled binary is not committed to git. If you're using the GUI, `packaging/build.sh` handles compilation automatically. Download a pre-built release if you just want the GUI without building from source.
 
 ## Usage
 

@@ -4,7 +4,7 @@
 # Creates /dev/ec_io: a seekable raw byte interface to the EC address space
 # that works under Secure Boot kernel lockdown (avoids LOCKDOWN_DEBUGFS).
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DKMS_NAME="ec-io"
@@ -24,19 +24,19 @@ rm -f /etc/modprobe.d/ec-sys-stock-blacklist.conf
 
 # --- Install new ec-io module ---
 echo "==> Copying source to /usr/src/${DKMS_NAME}-${DKMS_VER}/"
-mkdir -p /usr/src/${DKMS_NAME}-${DKMS_VER}
-cp "$SCRIPT_DIR/ec_io.c"   /usr/src/${DKMS_NAME}-${DKMS_VER}/
-cp "$SCRIPT_DIR/Makefile"  /usr/src/${DKMS_NAME}-${DKMS_VER}/
-cp "$SCRIPT_DIR/dkms.conf" /usr/src/${DKMS_NAME}-${DKMS_VER}/
+mkdir -p "/usr/src/${DKMS_NAME}-${DKMS_VER}"
+cp "$SCRIPT_DIR/ec_io.c"   "/usr/src/${DKMS_NAME}-${DKMS_VER}/"
+cp "$SCRIPT_DIR/Makefile"  "/usr/src/${DKMS_NAME}-${DKMS_VER}/"
+cp "$SCRIPT_DIR/dkms.conf" "/usr/src/${DKMS_NAME}-${DKMS_VER}/"
 
 echo "==> Adding DKMS module"
-dkms add ${DKMS_NAME}/${DKMS_VER} 2>/dev/null || true
+dkms add "${DKMS_NAME}/${DKMS_VER}" 2>/dev/null || true
 
 echo "==> Building DKMS module (DKMS signs automatically)"
-dkms build ${DKMS_NAME}/${DKMS_VER}
+dkms build "${DKMS_NAME}/${DKMS_VER}"
 
 echo "==> Installing DKMS module"
-dkms install ${DKMS_NAME}/${DKMS_VER}
+dkms install "${DKMS_NAME}/${DKMS_VER}"
 
 echo "==> Enrolling DKMS MOK key (if not already enrolled)"
 DKMS_MOK="/var/lib/shim-signed/mok/MOK.der"
