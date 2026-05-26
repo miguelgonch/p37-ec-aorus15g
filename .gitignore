@@ -2,3 +2,4 @@ dist/
 .venv/
 build/
 *.spec.bak
+gui/__pycache__/*
