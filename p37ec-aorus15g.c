@@ -70,8 +70,8 @@ void write1(FILE* f, unsigned char offset, unsigned char bit, const unsigned cha
 }
 
 FILE* initEc() {
-  system("modprobe ec_sys write_support=1");
-  return fopen("/sys/kernel/debug/ec/ec0/io", "r+");
+  system("modprobe ec_io");
+  return fopen("/dev/ec_io", "r+");
 }
 
 void closeEc(FILE* ec) {
@@ -135,8 +135,8 @@ int main(int argc, char** args) {
     printf("    Screen   (0 = Enabled)    [0x09.3]: %d\n", read1(ec, 0x09, 3));
     printf("  Fan status\n");
     printf("    Fan current mode:                   %s\n", fan_mode);
-    printf("    Fan0 speed (\%)            [0xB3]:   %d%%\n", (int)round(read8(ec, 0xB3) / 2.29));
-    printf("    Fan1 speed (\%)            [0xB4]:   %d%%\n", (int)round(read8(ec, 0xB4) / 2.29));
+    printf("    Fan0 speed (%%)            [0xB3]:   %d%%\n", (int)round(read8(ec, 0xB3) / 2.29));
+    printf("    Fan1 speed (%%)            [0xB4]:   %d%%\n", (int)round(read8(ec, 0xB4) / 2.29));
     printf("    Fan0 speed (RPM)          [0xFC]:   %d RPM\n", read16(ec, 0xFC));
     printf("    Fan1 speed (RPM)          [0xFE]:   %d RPM\n", read16(ec, 0xFE));
     printf("  Fan control\n");
@@ -145,8 +145,8 @@ int main(int argc, char** args) {
     printf("    Fan Deep control mode bit [0x0D.7]: %d\n", bit0D_7);
     printf("    Fan Auto Max bit          [0x0D.0]: %d\n", bit0D_0);
     printf("    Fan Fix mode bit          [0x06.4]: %d\n", bit06_4);
-    printf("    Fan0 target speed (\%)     [0xB0]:   %d%%\n", (int)round(read8(ec, 0xB0) / 2.29));
-    printf("    Fan1 target speed (\%)     [0xB1]:   %d%%\n", (int)round(read8(ec, 0xB1) / 2.29));
+    printf("    Fan0 target speed (%%)     [0xB0]:   %d%%\n", (int)round(read8(ec, 0xB0) / 2.29));
+    printf("    Fan1 target speed (%%)     [0xB1]:   %d%%\n", (int)round(read8(ec, 0xB1) / 2.29));
     printf("-----------------------------------\n");
   }
   closeEc(ec);
