@@ -18,13 +18,15 @@ g++ p37ec-aorus15g.c -o p37ec-aorus15g -lm
 
 The `-lm` flag is required for `round()` from `<math.h>`. The compiled binary must be named `p37ec-aorus15g` because `set-fan-mode.sh` calls it by that exact name.
 
+**The compiled binary is not tracked by git** (listed in `.gitignore`). It must be compiled from source before use. `packaging/build.sh` does this automatically as its first step.
+
 ### GUI (PyInstaller bundle)
 
 ```bash
 bash packaging/build.sh
 ```
 
-Installs `uv` if needed, creates `.venv/`, installs Python deps (PySide6, matplotlib, numpy, pyinstaller), and produces `dist/aorus-fan-control/` — a self-contained bundle that does not require Python on the target machine.
+Compiles the C binary, installs `uv` if needed, creates `.venv/`, installs Python deps (PySide6, matplotlib, numpy, pyinstaller), and produces `dist/aorus-fan-control/` — a self-contained bundle that does not require Python on the target machine.
 
 ## Usage
 
@@ -62,6 +64,55 @@ sudo bash packaging/install.sh
 ```
 
 This copies the bundle to `/opt/aorus-fan-control/`, installs the `.desktop` file to `/usr/share/applications/`, and installs the polkit action so pkexec recognises the binary.
+
+`packaging/install.sh` also supports installing from an extracted release tarball — it detects whether a `bundle/` directory sits alongside the script (tarball layout) and adjusts paths accordingly.
+
+## Release Pipeline
+
+Releases are triggered by pushing a `v*` tag (e.g. `v1.0.0`):
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0
+```
+
+### `.github/workflows/release.yml`
+
+Runs on `v*` tag push. Uses `ubuntu-22.04` (glibc 2.35) for broad compatibility.
+
+1. Installs `g++`, `libgl1`, `libglib2.0-0` (needed for headless PySide6 build)
+2. Runs `bash packaging/build.sh` (compiles C binary + PyInstaller bundle)
+3. Packages `dist/aorus-fan-control/` plus install scripts into a tarball:
+   `aorus-fan-control-vX.Y.Z-linux-x86_64.tar.gz`
+4. Generates a SHA-256 checksum file
+5. Creates a GitHub Release (via `softprops/action-gh-release@v2`) with both files as assets
+
+No secrets needed — uses the automatic `GITHUB_TOKEN`. Requires **Settings → Actions → General → Workflow permissions → Read and write permissions** on the repo.
+
+Sets `QT_QPA_PLATFORM=offscreen` so PyInstaller's PySide6 analysis phase works without a display.
+
+### `.github/workflows/ci.yml`
+
+Runs on push to `master`/`main` and all PRs. Two jobs:
+
+- **compile** — `g++ p37ec-aorus15g.c -o p37ec-aorus15g -lm` + sanity-checks the binary loads
+- **shellcheck** — lints `set-fan-mode.sh`, `dkms/install.sh`, `packaging/build.sh`, `packaging/install.sh`
+
+Does not run the full PyInstaller build (too slow for every PR).
+
+### Release tarball structure
+
+```
+aorus-fan-control/
+├── bundle/          ← PyInstaller dist/aorus-fan-control/ contents
+│   ├── aorus-fan-control
+│   └── _internal/
+│       ├── p37ec-aorus15g
+│       ├── set-fan-mode.sh
+│       └── (PySide6, numpy, matplotlib libs)
+├── install.sh
+├── aorus-fan-control.desktop
+└── com.github.aorus-fan-control.policy
+```
 
 ## Architecture
 
@@ -106,8 +157,8 @@ PySide6 desktop application (PyQt5 fallback). Five source files:
 | File | Role |
 |---|---|
 | `aorus-fan-control.spec` | PyInstaller spec (`console=False`, bundles EC binary + shell script) |
-| `build.sh` | Installs uv if needed → `uv venv .venv` → `uv pip install` → `pyinstaller` |
-| `install.sh` | Deploys bundle to `/opt/`, desktop file to `/usr/share/applications/`, polkit action |
+| `build.sh` | Compiles C binary → installs uv → `uv venv .venv` → `uv pip install` → `pyinstaller` |
+| `install.sh` | Deploys bundle to `/opt/`, desktop file to `/usr/share/applications/`, polkit action; supports both source-repo and tarball-extraction layouts |
 | `aorus-fan-control.desktop` | `Terminal=false`, `Exec=/opt/aorus-fan-control/aorus-fan-control` |
 | `com.github.aorus-fan-control.policy` | Polkit action (`auth_admin_keep`) for pkexec authentication dialog |
 
