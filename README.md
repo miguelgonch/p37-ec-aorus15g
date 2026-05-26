@@ -1,14 +1,22 @@
 # Overview
-This project provides fan mode control for the [(2020) Gigabyte AORUS 15G KB](https://www.gigabyte.com/Laptop/AORUS-15G-KB) (Intel Core i7-10875H + NVIDIA GeForce RTX 3070 Laptop), and should apply to similar AORUS models.
+This project adds a GUI for fan control on the [Gigabyte AORUS 15G XC](https://www.gigabyte.com/Laptop/AORUS-15G--RTX-30-Series) and similar AORUS models, built on top of [rcassani/p37-ec-aorus15g](https://github.com/rcassani/p37-ec-aorus15g).
 
-The code is based on:
+This project is based on:
 
-1. The repo [p37-ec](https://github.com/jertel/p37-ec) written for older Gigabyte models (P37Xv5 and P37Wv5).
-2. Two forks modified for the Gigabyte [Aero 14](https://github.com/christiansteinert/p37-ec-aero-14) and [Aero 15](https://github.com/tangalbert919/p37-ec-aero-15).
+1. [rcassani/p37-ec-aorus15g](https://github.com/rcassani/p37-ec-aorus15g) — CLI fan control for the AORUS 15G KB (Intel Core i7-10875H + RTX 3070).
+2. [p37-ec](https://github.com/jertel/p37-ec) — the original EC control tool written for older Gigabyte models (P37Xv5 and P37Wv5).
+3. Two forks modified for the Gigabyte [Aero 14](https://github.com/christiansteinert/p37-ec-aero-14) and [Aero 15](https://github.com/tangalbert919/p37-ec-aero-15).
 
-The program reads, monitors, and controls the Embedded Controller (EC) on the AORUS 15G to configure fan modes, and allows toggling the screen.
+The project includes:
+
+- **C program + Bash wrapper** — reads, monitors, and controls the Embedded Controller (EC) to configure fan modes and toggle the screen.
+- **Custom DKMS kernel module (`ec_io`)** — exposes `/dev/ec_io` as a misc device, enabling EC access even with **Secure Boot enabled** (the standard `ec_sys` debugfs approach is blocked by kernel lockdown).
+- **PySide6 GUI** — desktop application for graphical fan mode selection, live fan speed and temperature monitoring, and a fan curve chart — no terminal required.
+- **PyInstaller packaging** — self-contained bundle installable system-wide with a `.desktop` entry and a polkit action for password-prompted elevation.
 
 > **Tested on:** The CLI tools were originally developed for the AORUS 15G KB. The GUI application and all recent packaging changes were tested on a **Gigabyte AORUS 15G XC** running **Ubuntu 26.04**, with Secure Boot enabled.
+
+---
 
 # ⚠ Be careful
 
@@ -18,25 +26,33 @@ If you have a different laptop model, first double-check the correct EC register
 
 **Writing values into the wrong registers may damage your laptop!**
 
-# Installation
+---
 
-## 1. System dependencies
+# Getting started
+
+There are two ways to use this project — pick the one that fits your use case:
+
+| | **GUI** | **CLI** |
+|---|---|---|
+| Interface | Desktop app, no terminal needed | Terminal commands |
+| Use case | Day-to-day fan mode switching | Scripting, automation, low-level access |
+| Requires | System deps + DKMS module + build + install | System deps + DKMS module + build C binary |
+
+Both require the shared prerequisites below.
+
+---
+
+## Shared prerequisites
+
+### 1. System dependencies
 
 ```bash
 sudo apt-get install -y g++ dkms linux-source-$(uname -r | grep -oP '^\d+\.\d+\.\d+')
 ```
 
-## 2. Build the C binary
+### 2. Install the kernel module (`ec_io`)
 
-```bash
-g++ p37ec-aorus15g.c -o p37ec-aorus15g -lm
-```
-
-The `-lm` flag is required for `round()` from `<math.h>`. The binary must be named `p37ec-aorus15g` — `set-fan-mode.sh` calls it by that exact name.
-
-## 3. Install the kernel module (`ec_io`)
-
-The program accesses the EC through a custom DKMS kernel module that creates `/dev/ec_io`. This works with **Secure Boot enabled** — the standard `ec_sys` debugfs approach is blocked by kernel lockdown when Secure Boot is active (see [Secure Boot note](#secure-boot-and-kernel-lockdown)).
+Both the GUI and CLI access the EC through a custom DKMS kernel module that creates `/dev/ec_io`. This works with **Secure Boot enabled** — the standard `ec_sys` debugfs approach is blocked by kernel lockdown when Secure Boot is active (see [Secure Boot note](#secure-boot-and-kernel-lockdown)).
 
 ```bash
 sudo bash dkms/install.sh
@@ -47,15 +63,23 @@ This builds and installs the `ec_io` DKMS module, signs it with a managed MOK ke
 If MOK enrollment is needed, reboot and complete it at the blue MOK manager screen:  
 **Enroll MOK → Continue → Yes → enter the password you set → Reboot**
 
-## 4. Auto-load the module on boot
+### 3. Auto-load the module on boot
 
 ```bash
 echo "ec_io" | sudo tee /etc/modules-load.d/ec_io.conf
 ```
 
-## 5. Build and install the GUI (optional)
+---
 
-The GUI is a PySide6 desktop application that provides a graphical interface for fan mode selection, live fan speed and temperature monitoring, and a fan curve chart — with no terminal required.
+# GUI
+
+![AORUS Fan Control GUI](gui.png)
+
+A PySide6 desktop application for fan mode selection, live fan speed and temperature monitoring, and a fan curve chart. No terminal required after installation.
+
+For full details on the GUI features and development usage, see [gui/README.md](./gui/README.md).
+
+## Installation
 
 **Build** (requires `curl` and `python3`; `uv` is installed automatically if missing):
 
@@ -73,11 +97,31 @@ sudo bash packaging/install.sh
 
 This copies the bundle to `/opt/aorus-fan-control/`, adds *AORUS Fan Control* to the system application menu, and installs a polkit action so a graphical password dialog appears on launch instead of requiring a terminal `sudo`.
 
+## Running
+
 After installation, find **AORUS Fan Control** in your app menu and double-click it — no terminal needed.
+
+To run from the repo during development:
+
+```bash
+sudo python3 gui/main.py
+```
 
 ---
 
-# CLI usage
+# CLI
+
+The original C program and Bash wrapper for direct EC register access from the terminal.
+
+## Build
+
+```bash
+g++ p37ec-aorus15g.c -o p37ec-aorus15g -lm
+```
+
+The `-lm` flag is required for `round()` from `<math.h>`. The binary must be named `p37ec-aorus15g` — `set-fan-mode.sh` calls it by that exact name.
+
+## Usage
 
 All invocations require `sudo` (EC access via `/dev/ec_io` requires root):
 
@@ -127,17 +171,6 @@ Sample output of `sudo ./p37ec-aorus15g`:
 
 The notation `[0xB0]` represents an **8-bit** register within the EC.  
 The notation `[0x08.6]` means bit `6` (bit 0 = LSB) of register `0x08`.
-
----
-
-# GUI
-
-A desktop GUI for reading and controlling the Embedded Controller (EC) fan modes tested on **Gigabyte AORUS 15G XC** laptop.
-
-[Check the README.md](./gui/README.md)
-
-![alt text](gui.png)
-
 
 ---
 
